@@ -107,7 +107,10 @@ contract GAUC is IGAUC {
     }
 
     function deposit(uint256 _amount, address _user) public override {
-        IERC20(dai).safeTransferFrom(msg.sender, address(this), _amount);
+        require(
+            IERC20(dai).transferFrom(msg.sender, address(this), _amount),
+            "GAUC: Dai transferFrom failed"
+        );
         balance[_user] = balance[_user].add(_amount);
 
         emit Deposit(msg.sender, _amount, _user);
@@ -118,7 +121,10 @@ contract GAUC is IGAUC {
 
         require(available >= _amount, "GAUC: insufficient available balance");
 
-        IERC20(dai).safeTransfer(msg.sender, _amount);
+        require(
+            IERC20(dai).transfer(msg.sender, _amount),
+            "GAUC: Dai transfer failed"
+        );
         balance[msg.sender] = balance[msg.sender].sub(_amount);
 
         emit Withdraw(msg.sender, _amount);
@@ -138,7 +144,10 @@ contract GAUC is IGAUC {
         GSDIWallet wallet = new GSDIWallet();
         wallet.initialize(address(gsdiNFT), address(this));
 
-        _token.safeTransferFrom(msg.sender, address(wallet), _amount);
+        require(
+            _token.transferFrom(msg.sender, address(wallet), _amount),
+            "GAUC: IERC20 transferFrom failed"
+        );
 
         uint256 auctionId = _auctionIdTracker.current();
 
