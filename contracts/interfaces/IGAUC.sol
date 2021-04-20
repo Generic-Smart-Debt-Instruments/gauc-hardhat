@@ -26,15 +26,16 @@ interface IGAUC {
 
     /// @notice Returns the data for a particular auction.
     /// @param _auctionId Unique ID for the auction.
-    /// @return auctionEndTimestamp_ Timestamp at which the auction closes.
-    /// @return lowestBid_ Current lowest bid for the face value of the GSDI.
-    /// @return maturity_ Date at which the GSDI will mature.
-    /// @return price_ Price of the GSDI to be paid by the lender.
-    /// @return minBidIncrement_ Min increment for bids, such as 1000 DAI.
-    /// @return IGSDIWallet_ Address of the wallet to back the GSDI.
-    /// @return lowestBidder_ Address of the current lowest bidder.
-    /// @return borrower_ Address of the borrower who will receive the assets once covered.
-    /// @return auctionStatus_ Current status of the auction.
+    /// @return
+    /// auctionEndTimestamp_ Timestamp at which the auction closes.
+    /// lowestBid_ Current lowest bid for the face value of the GSDI.
+    /// maturity_ Date at which the GSDI will mature.
+    /// price_ Price of the GSDI to be paid by the lender.
+    /// minBidIncrement_ Min increment for bids, such as 1000 DAI.
+    /// IGSDIWallet_ Address of the wallet to back the GSDI.
+    /// lowestBidder_ Address of the current lowest bidder.
+    /// borrower_ Address of the borrower who will receive the assets once covered.
+    /// auctionStatus_ Current status of the auction.
     function auctionInfo(uint256 _auctionId)
         external
         view
