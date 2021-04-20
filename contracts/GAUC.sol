@@ -307,6 +307,7 @@ contract GAUC is IGAUC {
             );
 
         uint256 purchasePrice = getPurchasePrice(auction.price);
+        IERC20(dai).safeApprove(address(gsdiNFT), 0);
         IERC20(dai).safeApprove(address(gsdiNFT), purchasePrice);
 
         gsdiNFT.purchase(tokenId);
