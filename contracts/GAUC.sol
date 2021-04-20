@@ -93,7 +93,7 @@ contract GAUC is IGAUC {
         AuctionInfo storage auction = getAuctionInfo(_auctionId);
 
         if (
-            auction.maturity <= block.timestamp &&
+            auction.auctionEndTimestamp <= block.timestamp &&
             auction.auctionStatus == AUCTION_STATUS.OPEN
         ) {
             if (auction.lowestBidder != address(0)) {
