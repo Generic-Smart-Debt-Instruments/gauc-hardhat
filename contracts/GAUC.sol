@@ -250,6 +250,7 @@ contract GAUC is IGAUC {
 
     function bid(uint256 _auctionId, uint256 _amount) public override {
         AuctionInfo storage auction = updateAuctionStatus(_auctionId);
+        uint256 purchasePrice = getPurchasePrice(auction.price);
 
         require(
             auction.auctionStatus == AUCTION_STATUS.OPEN,
@@ -260,16 +261,14 @@ contract GAUC is IGAUC {
             "GAUC: must be at least minBidIncrement"
         );
         require(
-            auction.lowestBid.mul(99).div(100) >= _amount,
+            auction.lowestBid.mul(99) >= _amount.mul(100),
             "GAUC: must be 1% lower than lowest bid"
         );
         require(
             msg.sender == auction.lowestBidder ||
-                balanceAvailable(msg.sender) >= _amount,
+                balanceAvailable(msg.sender) >= purchasePrice,
             "GAUC: insufficient balance"
         );
-
-        uint256 purchasePrice = getPurchasePrice(auction.price);
 
         // unlock prev bidder balance
         balanceLocked[auction.lowestBidder] = balanceLocked[
