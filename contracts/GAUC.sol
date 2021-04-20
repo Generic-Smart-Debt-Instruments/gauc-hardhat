@@ -48,7 +48,12 @@ contract GAUC is IGAUC {
     );
     event AuctionCancel(address indexed user, uint256 _auctionId);
     event AuctionBid(address indexed user, uint256 _auctionId, uint256 _amount);
-    event AuctionClaim(address indexed user, uint256 _auctionId);
+    event AuctionClaim(
+        uint256 _auctionId,
+        address indexed borrower,
+        address indexed lender,
+        uint256 _tokenId
+    );
 
     address public dai;
     GSDINFT public gsdiNFT;
@@ -237,6 +242,7 @@ contract GAUC is IGAUC {
         );
         require(auction.lowestBidder == address(0), "GAUC: bidder exists");
 
+        GSDIWallet(auction.IGSDIWallet).setExecutor(auction.borrower);
         auction.auctionStatus = AUCTION_STATUS.CANCELED;
 
         emit AuctionCancel(msg.sender, _auctionId);
@@ -257,9 +263,27 @@ contract GAUC is IGAUC {
             auction.lowestBid.mul(99).div(100) >= _amount,
             "GAUC: must be 1% lower than lowest bid"
         );
+        require(
+            msg.sender == auction.lowestBidder ||
+                balanceAvailable(msg.sender) >= _amount,
+            "GAUC: insufficient balance"
+        );
+
+        uint256 purchasePrice = getPurchasePrice(auction.price);
+
+        // unlock prev bidder balance
+        balanceLocked[auction.lowestBidder] = balanceLocked[
+            auction.lowestBidder
+        ]
+            .sub(purchasePrice);
 
         auction.lowestBid = _amount;
         auction.lowestBidder = msg.sender;
+
+        // lock bidder balance
+        balanceLocked[msg.sender] = balanceLocked[msg.sender].add(
+            purchasePrice
+        );
 
         emit AuctionBid(msg.sender, _auctionId, _amount);
     }
@@ -273,18 +297,38 @@ contract GAUC is IGAUC {
         );
         require(auction.lowestBidder == msg.sender, "GAUC: invalid claimer");
 
-        gsdiNFT.propose(
-            auction.maturity,
-            auction.lowestBid,
-            auction.price,
-            GSDIWallet(auction.IGSDIWallet),
-            dai,
-            auction.borrower
-        );
+        uint256 tokenId =
+            gsdiNFT.propose(
+                auction.maturity,
+                auction.lowestBid,
+                auction.price,
+                GSDIWallet(auction.IGSDIWallet),
+                dai,
+                auction.borrower
+            );
+
+        uint256 purchasePrice = getPurchasePrice(auction.price);
+        IERC20(dai).safeApprove(address(gsdiNFT), purchasePrice);
+
+        gsdiNFT.purchase(tokenId);
 
         auction.auctionStatus = AUCTION_STATUS.CLAIMED;
 
-        emit AuctionClaim(msg.sender, _auctionId);
+        balance[msg.sender] = balance[msg.sender].sub(purchasePrice);
+        balanceLocked[msg.sender] = balanceLocked[msg.sender].sub(
+            purchasePrice
+        );
+
+        balance[auction.borrower] = balance[auction.borrower].add(
+            auction.price
+        );
+
+        emit AuctionClaim(
+            _auctionId,
+            auction.borrower,
+            auction.borrower,
+            tokenId
+        );
     }
 
     // internal
@@ -309,5 +353,12 @@ contract GAUC is IGAUC {
         auction.auctionStatus = auctionStatus(_auctionId);
 
         return auction;
+    }
+
+    function getPurchasePrice(uint256 price) internal view returns (uint256) {
+        if (gsdiNFT.isFeeEnabled()) {
+            return price.add(price.mul(30).div(10000));
+        }
+        return price;
     }
 }
