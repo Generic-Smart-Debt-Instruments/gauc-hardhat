@@ -257,24 +257,21 @@ contract GAUC is IGAUC {
             "GAUC: auction not open"
         );
         require(
-            auction.minBidIncrement <= _amount,
-            "GAUC: must be at least minBidIncrement"
+            auction.lowestBid.sub(auction.minBidIncrement) <= _amount,
+            "GAUC: must be lower than preview bid"
         );
         require(
-            auction.lowestBid.mul(99) >= _amount.mul(100),
-            "GAUC: must be 1% lower than lowest bid"
-        );
-        require(
-            msg.sender == auction.lowestBidder ||
-                balanceAvailable(msg.sender) >= purchasePrice,
+            balanceAvailable(msg.sender) >= purchasePrice,
             "GAUC: insufficient balance"
         );
 
-        // unlock prev bidder balance
-        balanceLocked[auction.lowestBidder] = balanceLocked[
-            auction.lowestBidder
-        ]
-            .sub(purchasePrice);
+        if (auction.lowestBidder != address(0)) {
+            // unlock prev bidder balance
+            balanceLocked[auction.lowestBidder] = balanceLocked[
+                auction.lowestBidder
+            ]
+                .sub(purchasePrice);
+        }
 
         auction.lowestBid = _amount;
         auction.lowestBidder = msg.sender;
@@ -307,10 +304,9 @@ contract GAUC is IGAUC {
             );
 
         uint256 purchasePrice = getPurchasePrice(auction.price);
-        IERC20(dai).safeApprove(address(gsdiNFT), 0);
-        IERC20(dai).safeApprove(address(gsdiNFT), purchasePrice);
-
+        IERC20(dai).approve(address(gsdiNFT), purchasePrice);
         gsdiNFT.purchase(tokenId);
+        gsdiNFT.safeTransferFrom(address(this), msg.sender, tokenId);
 
         auction.auctionStatus = AUCTION_STATUS.CLAIMED;
 
