@@ -258,7 +258,7 @@ contract GAUC is IGAUC {
         );
         require(
             auction.lowestBid.sub(auction.minBidIncrement) <= _amount,
-            "GAUC: must be lower than preview bid"
+            "GAUC: must be lower than previous bid"
         );
         require(
             balanceAvailable(msg.sender) >= purchasePrice,
