@@ -297,15 +297,14 @@ contract GAUC is IGAUC {
         );
         require(auction.lowestBidder == msg.sender, "GAUC: invalid claimer");
 
-        uint256 tokenId_ =
-            gsdiNFT.propose(
-                auction.maturity,
-                auction.lowestBid,
-                auction.price,
-                GSDIWallet(auction.IGSDIWallet),
-                dai,
-                auction.borrower
-            );
+        tokenId_ = gsdiNFT.propose(
+            auction.maturity,
+            auction.lowestBid,
+            auction.price,
+            GSDIWallet(auction.IGSDIWallet),
+            dai,
+            auction.borrower
+        );
 
         uint256 purchasePrice = getPurchasePrice(auction.price);
         IERC20(dai).approve(address(gsdiNFT), purchasePrice);
@@ -327,7 +326,7 @@ contract GAUC is IGAUC {
             _auctionId,
             auction.borrower,
             auction.borrower,
-            tokenId
+            tokenId_
         );
     }
 
