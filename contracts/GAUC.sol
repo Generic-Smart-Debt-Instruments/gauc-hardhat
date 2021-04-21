@@ -284,7 +284,11 @@ contract GAUC is IGAUC {
         emit AuctionBid(msg.sender, _auctionId, _amount);
     }
 
-    function claim(uint256 _auctionId) public override {
+    function claim(uint256 _auctionId)
+        public
+        override
+        returns (uint256 tokenId_)
+    {
         AuctionInfo storage auction = updateAuctionStatus(_auctionId);
 
         require(
@@ -293,7 +297,7 @@ contract GAUC is IGAUC {
         );
         require(auction.lowestBidder == msg.sender, "GAUC: invalid claimer");
 
-        uint256 tokenId =
+        uint256 tokenId_ =
             gsdiNFT.propose(
                 auction.maturity,
                 auction.lowestBid,
@@ -305,8 +309,8 @@ contract GAUC is IGAUC {
 
         uint256 purchasePrice = getPurchasePrice(auction.price);
         IERC20(dai).approve(address(gsdiNFT), purchasePrice);
-        gsdiNFT.purchase(tokenId);
-        gsdiNFT.safeTransferFrom(address(this), msg.sender, tokenId);
+        gsdiNFT.purchase(tokenId_);
+        gsdiNFT.safeTransferFrom(address(this), msg.sender, tokenId_);
 
         auction.auctionStatus = AUCTION_STATUS.CLAIMED;
 

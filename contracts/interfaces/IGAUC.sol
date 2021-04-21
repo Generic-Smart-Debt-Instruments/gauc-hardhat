@@ -136,5 +136,6 @@ interface IGAUC {
 
     /// @notice Mints a new GSDI for a CLAIMABLE auction to the winning bidder. Callable by anyone.
     /// @param _auctionId Claimable Auction to mint the GSDI for.
-    function claim(uint256 _auctionId) external;
+    /// @return tokenId_ ID for the GSDI token created.
+    function claim(uint256 _auctionId) external returns (uint256 tokenId_);
 }
